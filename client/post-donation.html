@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Post Donation - Food Relief Platform</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <style>
+    .step-indicator { display: flex; gap: 10px; margin-bottom: 20px; }
+    .step-dot { flex: 1; height: 10px; background: #ddd; border-radius: 5px; transition: background 0.3s; }
+    .step-dot.active { background: var(--primary-green); }
+    .form-step { display: none; }
+    .form-step.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <img src="/images/logo.png" alt="Food Relief Logo">
+      Food Relief
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" id="logoutBtn" class="btn btn-outline">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard-donor.html">My Donations</a></li>
+        <li><a href="/post-donation.html" class="active">Post Donation</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <h2>Post a New Donation</h2>
+      
+      <div class="form-container" style="margin: 20px 0; max-width: 600px;">
+        <div class="step-indicator">
+          <div class="step-dot active" id="dot1"></div>
+          <div class="step-dot" id="dot2"></div>
+          <div class="step-dot" id="dot3"></div>
+        </div>
+
+        <div id="alertContainer" class="alert hidden"></div>
+
+        <form id="postDonationForm">
+          <!-- Step 1: Details -->
+          <div class="form-step active" id="step1">
+            <h3>Step 1: Food Details</h3>
+            <div class="form-group">
+              <label>Food Type</label>
+              <input type="text" id="foodType" placeholder="e.g. Rice and Curry, Bread, etc." required>
+            </div>
+            <div class="form-group">
+              <label>Quantity</label>
+              <input type="text" id="quantity" placeholder="e.g. 50 meals, 10 kg" required>
+            </div>
+            <div class="form-group">
+              <label>Description / Occasion (Optional)</label>
+              <textarea id="description" rows="3"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="donorHelper.nextStep(2)">Next &rarr;</button>
+          </div>
+
+          <!-- Step 2: Photos -->
+          <div class="form-step" id="step2">
+            <h3>Step 2: Upload Photos</h3>
+            <div class="form-group">
+              <label>Photos (Up to 5)</label>
+              <input type="file" id="photos" accept="image/*" multiple>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <button type="button" class="btn btn-outline" onclick="donorHelper.nextStep(1)">&larr; Back</button>
+              <button type="button" class="btn btn-primary" onclick="donorHelper.nextStep(3)">Next &rarr;</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Location & Time -->
+          <div class="form-step" id="step3">
+            <h3>Step 3: Location & Timing</h3>
+            <div class="form-group">
+              <label>Pickup Address</label>
+              <input type="text" id="pickupAddress" required>
+            </div>
+            <div class="form-group">
+              <label>Location Coordinates</label>
+              <div style="display:flex; gap:10px;">
+                <input type="text" id="longitude" placeholder="Longitude" readonly required>
+                <input type="text" id="latitude" placeholder="Latitude" readonly required>
+                <button type="button" class="btn btn-outline" id="getLocationBtn" style="white-space:nowrap;">Get Location</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Available From</label>
+              <input type="datetime-local" id="availableFrom" required>
+            </div>
+            <div class="form-group">
+              <label>Available Till</label>
+              <input type="datetime-local" id="availableTill" required>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:20px;">
+              <button type="button" class="btn btn-outline" onclick="donorHelper.nextStep(2)">&larr; Back</button>
+              <button type="submit" class="btn btn-primary" id="submitBtn">Submit Donation</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/donor.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      authHelper.checkAuth(['donor']);
+      authHelper.setupLogoutButton();
+
+      document.getElementById('getLocationBtn').addEventListener('click', () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+            document.getElementById('longitude').value = pos.coords.longitude;
+            document.getElementById('latitude').value = pos.coords.latitude;
+          }, () => authHelper.showAlert("Could not fetch location. Ensure location permissions are granted."));
+        } else {
+          authHelper.showAlert("Geolocation is not supported by this browser.");
+        }
+      });
+      
+      document.getElementById('postDonationForm').addEventListener('submit', donorHelper.submitDonation);
+    });
+  </script>
+</body>
+</html>

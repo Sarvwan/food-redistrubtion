@@ -1,0 +1,43 @@
+.map-container {
+  height: 500px;
+  width: 100%;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: #eee; /* Placeholder while loading */
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+.map-info-window {
+  padding: 10px;
+  max-width: 250px;
+  font-family: 'Inter', sans-serif;
+}
+
+.map-info-window h4 {
+  margin-bottom: 8px;
+  color: var(--primary-green);
+}
+
+.map-info-window p {
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.map-info-window .badge {
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.map-info-window button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  font-size: 0.9rem;
+}

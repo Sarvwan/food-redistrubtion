@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NGO Dashboard - Food Relief Platform</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/map.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <img src="/images/logo.png" alt="Food Relief Logo">
+      Food Relief NGO
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" id="logoutBtn" class="btn btn-outline">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="dashboard-container">
+    <main class="dashboard-content" style="max-width: 1200px; margin: 0 auto; width: 100%;">
+      
+      <div id="alertContainer" class="alert hidden"></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="ngoHelper.switchTab('mapView')">Nearby Donations</button>
+        <button class="tab-btn" onclick="ngoHelper.switchTab('myClaims')">My Claims</button>
+      </div>
+
+      <div id="mapView" class="tab-content active">
+        <div class="map-container">
+          <div id="map"></div>
+        </div>
+        <h3>Available Donations List</h3>
+        <div id="availableDonationsList" class="card-grid" style="margin-top:20px;"></div>
+      </div>
+
+      <div id="myClaims" class="tab-content">
+        <h3>My Claimed Donations</h3>
+        <div id="myClaimsList" class="card-grid" style="margin-top:20px;"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Upload Proof Modal -->
+  <div id="uploadProofModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Upload Distribution Proof</h3>
+        <span class="close-btn" id="closeProofModal">&times;</span>
+      </div>
+      <form id="proofForm">
+        <div id="proofAlert" class="alert hidden"></div>
+        <input type="hidden" id="proofDonationId">
+        <div class="form-group">
+          <label>Photos (Select 2 to 5 images)</label>
+          <input type="file" id="proofPhotos" accept="image/*" multiple required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitProofBtn" style="width:100%;">Submit Proof</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/ngo.js"></script>
+  <script src="/js/map.js"></script>
+  <!-- Hardcoding placeholder for map API key based on implementation plan choice. -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      authHelper.checkAuth(['ngo']);
+      authHelper.setupLogoutButton();
+      
+      document.getElementById('proofForm').addEventListener('submit', ngoHelper.submitProof);
+      
+      // Fallback if maps API doesn't load
+      setTimeout(() => {
+        if(!window.mapHelper.map) {
+          ngoHelper.fetchAvailableDonations();
+        }
+      }, 3000);
+    });
+  </script>
+</body>
+</html>

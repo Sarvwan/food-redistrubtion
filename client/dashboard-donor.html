@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Donor Dashboard - Food Relief Platform</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <img src="/images/logo.png" alt="Food Relief Logo">
+      Food Relief
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" id="logoutBtn" class="btn btn-outline">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard-donor.html" class="active">My Donations</a></li>
+        <li><a href="/post-donation.html">Post Donation</a></li>
+      </ul>
+    </aside>
+
+    <main class="dashboard-content">
+      <div class="section-header">
+        <h2>My Donations</h2>
+        <a href="/post-donation.html" class="btn btn-primary">Post New Donation</a>
+      </div>
+      <div id="alertContainer" class="alert hidden"></div>
+      
+      <div id="donationsGrid" class="card-grid">
+        <!-- Rendered via JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Proof Modal -->
+  <div id="proofModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Donation Proof</h3>
+        <span class="close-btn" id="closeProofModal">&times;</span>
+      </div>
+      <div id="proofBody">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/donor.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      authHelper.checkAuth(['donor']);
+      authHelper.setupLogoutButton();
+      donorHelper.fetchMyDonations();
+    });
+  </script>
+</body>
+</html>
