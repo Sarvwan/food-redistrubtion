@@ -1,123 +1,122 @@
 <div align="center">
-  <br />
-  <h3>SARVWAN FOOD RELIEF</h3>
-  <p>An enterprise-grade logistics and coordination platform designed to eliminate food waste through precise, real-time NGO matchmaking.</p>
+  <h1>SARVWAN</h1>
+  <p><strong>Food Redistribution Logistics Platform</strong></p>
+
+  <p>
+    <img src="https://img.shields.io/badge/React-000000?style=for-the-badge&logo=react&logoColor=white" alt="React" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-000000?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+    <img src="https://img.shields.io/badge/Node.js-000000?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
+    <img src="https://img.shields.io/badge/MongoDB-000000?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  </p>
 </div>
 
 <br />
 
 ## OVERVIEW
 
-Sarvwan is a full-stack distributed system built to seamlessly bridge the gap between food donors and verified non-governmental organizations (NGOs). By leveraging geospatial indexing and role-based authentication, the platform ensures rapid, secure, and transparent reallocation of surplus resources to communities in need.
-
-<br />
+Sarvwan is a high-performance logistics and redistribution platform designed to bridge the gap between food surplus entities and verified Non-Governmental Organizations (NGOs). By leveraging geospatial indexing and real-time data, the architecture ensures rapid, traceable, and secure food allocation.
 
 ## ARCHITECTURE & STACK
 
-The platform is engineered on a modern, high-performance stack prioritizing scalability, security, and exceptional user experience.
+The platform is engineered using a decoupled client-server model, ensuring scalability and strict separation of concerns.
 
-### Client
-- **Framework:** React 18 (Vite)
-- **Styling:** Tailwind CSS v4, Radix UI Primitives
-- **State Management:** Zustand
+**Client Application**
+- **Framework:** React 18 (Vite build system)
+- **Styling:** Tailwind CSS v4, Shadcn UI (Radix Primitives)
+- **State & Routing:** Zustand, React Router DOM
 - **Typography:** Plus Jakarta Sans
 
-### Server
+**Server Application**
 - **Runtime:** Node.js, Express.js
-- **Database:** MongoDB (Mongoose) with 2dsphere indexes
-- **Security:** JWT, bcrypt, Helmet.js, express-rate-limit
-- **Communications:** Nodemailer
+- **Database:** MongoDB (Mongoose ODM) with 2dsphere geospatial indexing
+- **Security:** JSON Web Tokens (JWT), bcrypt, Helmet.js, express-rate-limit
+- **Services:** Nodemailer (SMTP abstraction)
 
-<br />
-
-## CORE CAPABILITIES
-
-- **Geospatial Intelligence:** Proprietary algorithms match donors with NGOs within an exact 15km radius using MongoDB spatial queries.
-- **Role-Based Access Control:** Distinct, isolated environments for Donors, NGOs, and System Administrators.
-- **End-to-End Transparency:** Mandatory cryptographic proof-of-delivery uploads to maintain a verifiable audit trail.
-- **Asynchronous Communications:** Automated email alerting systems for immediate dispatch notifications.
-
-<br />
-
-## SYSTEM DEPLOYMENT
+## DEPLOYMENT INSTRUCTIONS
 
 ### Prerequisites
-Node.js (v18.0.0 or higher) and MongoDB (v6.0 or higher) are required for local instantiation.
+- Node.js v18.0.0 or higher
+- MongoDB instance (Local or Atlas)
 
 ### 1. Backend Initialization
-```bash
-git clone https://github.com/Sarvwan/food-redistrubtion.git
-cd food-redistrubtion
 
+Navigate to the root directory and install core dependencies.
+
+```bash
 npm install
-npm run dev
 ```
 
-### 2. Frontend Initialization
-```bash
-cd client
-
-npm install
-npm run dev
-```
-
-<br />
-
-## ENVIRONMENT CONFIGURATION
-
-A `.env` file must be provisioned in the root directory prior to server initialization:
+Construct the local environment file (`.env`):
 
 ```env
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/food-relief
-JWT_SECRET=your_cryptographic_secret
+JWT_SECRET=your_secure_cryptographic_key
 
 # SMTP Configuration
-EMAIL_USER=system@yourdomain.com
-EMAIL_PASS=your_smtp_password
+EMAIL_USER=your_service_account@domain.com
+EMAIL_PASS=your_app_specific_password
 
-# Client Routing
+# Client Origin Reference
 CLIENT_URL=http://localhost:5173
 ```
 
-<br />
+Execute the server instance:
 
-## API SPECIFICATION
+```bash
+npm run dev
+```
 
-The system exposes a secure RESTful API. Below is the endpoint architecture:
+### 2. Client Initialization
+
+In a separate terminal instance, navigate to the client workspace.
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+The application client will securely connect to the local API gateway.
+
+## API REFERENCE
+
+All endpoints expect and return `application/json` payloads. Authenticated routes require a standard Bearer token in the Authorization header.
 
 ### Authentication & Identity
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/auth/register` | Provision new Donor or NGO identity |
-| `POST` | `/api/auth/login` | Authenticate and issue session token |
-| `GET` | `/api/auth/me` | Retrieve verified identity payload |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Provision new entity | Public |
+| `POST` | `/api/auth/login` | Authenticate and retrieve JWT | Public |
+| `GET` | `/api/auth/me` | Retrieve entity profile | Restricted |
 
 ### Donor Operations
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/donor/post` | Initialize a resource donation |
-| `GET` | `/api/donor/my-donations` | Query active and historical donations |
-| `GET` | `/api/donor/donation/:id` | Fetch specific asset tracking data |
-| `PATCH` | `/api/donor/donation/:id/cancel`| Terminate an active donation cycle |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `POST` | `/api/donor/post` | Initialize surplus record | Donor |
+| `GET` | `/api/donor/my-donations` | Fetch historical records | Donor |
+| `GET` | `/api/donor/donation/:id` | Fetch specific manifest | Donor |
+| `PATCH` | `/api/donor/donation/:id/cancel`| Abort surplus allocation | Donor |
 
 ### NGO Operations
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/ngo/available-donations` | Query proximate open resources |
-| `POST` | `/api/ngo/claim/:donationId` | Lock and claim a target resource |
-| `PATCH` | `/api/ngo/collect/:donationId` | Update chain-of-custody status |
-| `POST` | `/api/ngo/proof/:donationId` | Upload delivery verification artifacts |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `GET` | `/api/ngo/available-donations` | Geospatial fetch (15km radius) | NGO |
+| `GET` | `/api/ngo/my-claims` | Fetch claimed manifests | NGO |
+| `POST` | `/api/ngo/claim/:donationId` | Lock surplus allocation | NGO |
+| `PATCH` | `/api/ngo/collect/:donationId` | Finalize collection | NGO |
+| `POST` | `/api/ngo/proof/:donationId` | Upload audit documentation | NGO |
 
 ### Administrative Controls
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/admin/pending-ngos` | Queue of unverified organizations |
-| `PATCH` | `/api/admin/approve-ngo/:id` | Authorize organization access |
-| `GET` | `/api/admin/stats` | System-wide telemetry and analytics |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `GET` | `/api/admin/pending-ngos` | Audit unverified NGOs | Admin |
+| `PATCH` | `/api/admin/approve-ngo/:id` | Authorize NGO entity | Admin |
+| `PATCH` | `/api/admin/reject-ngo/:id` | Terminate NGO entity | Admin |
+| `GET` | `/api/admin/all-donations` | Global manifest view | Admin |
+| `GET` | `/api/admin/stats` | System metrics retrieval | Admin |
 
 <br />
-
 <div align="center">
-  <p>Sarvwan Engineering</p>
+  <small>&copy; Sarvwan Organization. All Rights Reserved.</small>
 </div>
