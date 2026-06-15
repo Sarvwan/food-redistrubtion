@@ -8,13 +8,13 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   address: { type: String },
   location: {
-    type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number] } // [longitude, latitude]
+    type: { type: String, enum: ['Point'] },
+    coordinates: { type: [Number] }
   },
   isVerified: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 
-userSchema.index({ location: '2dsphere' });
+userSchema.index({ location: '2dsphere' }, { sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

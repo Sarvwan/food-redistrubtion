@@ -12,7 +12,7 @@ exports.register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password, role, phone, address, organizationName, registrationNumber, category, longitude, latitude } = req.body;
+  const { name, email, password, role, phone, address, organizationName, registrationNumber, category, longitude, latitude, lng, lat } = req.body;
 
   try {
     // Check if user exists
@@ -39,12 +39,12 @@ exports.register = async (req, res) => {
       address
     });
 
-    if (longitude && latitude) {
-      user.location = {
-        type: 'Point',
-        coordinates: [parseFloat(longitude), parseFloat(latitude)]
-      };
-    }
+    const finalLng = parseFloat(longitude || lng || 0);
+    const finalLat = parseFloat(latitude || lat || 0);
+    user.location = {
+      type: 'Point',
+      coordinates: [isNaN(finalLng) ? 0 : finalLng, isNaN(finalLat) ? 0 : finalLat]
+    };
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -78,13 +78,13 @@ exports.register = async (req, res) => {
       { expiresIn: '7d' }, // Expires in 7 days
       (err, token) => {
         if (err) throw err;
-        res.status(201).json({ token });
+        res.status(201).json({ token, user: { id: user._id, role: user.role } });
       }
     );
 
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error("Registration Error:", err);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
 
@@ -125,12 +125,12 @@ exports.login = async (req, res) => {
       { expiresIn: '7d' },
       (err, token) => {
         if (err) throw err;
-        res.status(200).json({ token });
+        res.status(200).json({ token, user: { id: user._id, role: user.role } });
       }
     );
 
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error("Login Error:", err);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };

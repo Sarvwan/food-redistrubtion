@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Relief Platform</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4rem 5%;
+      background-color: var(--light-green);
+    }
+    .hero-content {
+      flex: 1;
+      padding-right: 2rem;
+    }
+    .hero-content h1 {
+      font-size: 3rem;
+      color: var(--dark-green);
+      margin-bottom: 1rem;
+    }
+    .hero-content p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .hero-image {
+      flex: 1;
+    }
+    .hero-image img {
+      width: 100%;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+    .how-it-works {
+      padding: 4rem 5%;
+      text-align: center;
+    }
+    .steps {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .step {
+      flex: 1;
+      min-width: 250px;
+      padding: 2rem;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+    .step h3 {
+      color: var(--primary-green);
+      margin-bottom: 1rem;
+    }
+    .stats-section {
+      background-color: var(--dark-green);
+      color: white;
+      padding: 4rem 5%;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .stat-item h2 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <img src="/images/logo.png" alt="Food Relief Logo">
+      Food Relief
+    </a>
+    <ul class="nav-links">
+      <li><a href="/login.html">Login</a></li>
+      <li><a href="/register.html" class="btn btn-primary">Register</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Turn Surplus into Sustenance</h1>
+      <p>Connect excess food from donors to registered NGOs seamlessly. Together, we can reduce waste and feed those in need.</p>
+      <a href="/register.html" class="btn btn-primary" style="margin-right: 10px;">Become a Donor</a>
+      <a href="/register.html" class="btn btn-outline">Register as NGO</a>
+    </div>
+    <div class="hero-image">
+      <img src="/images/hero.png" alt="Hero Image">
+    </div>
+  </section>
+
+  <section class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step">
+        <h3>1. Post Donation</h3>
+        <p>Donors post details about available surplus food, including quantity, type, and pickup location.</p>
+      </div>
+      <div class="step">
+        <h3>2. Claim & Collect</h3>
+        <p>Nearby approved NGOs are notified and can claim the donation for immediate pickup.</p>
+      </div>
+      <div class="step">
+        <h3>3. Share Proof</h3>
+        <p>NGOs distribute the food and upload proof photos, notifying donors that their food made an impact.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-section">
+    <div class="stat-item">
+      <h2 id="stat-donations">...</h2>
+      <p>Total Donations</p>
+    </div>
+    <div class="stat-item">
+      <h2 id="stat-completed">...</h2>
+      <p>Successful Deliveries</p>
+    </div>
+    <div class="stat-item">
+      <h2 id="stat-ngos">...</h2>
+      <p>Approved NGOs</p>
+    </div>
+    <div class="stat-item">
+      <h2 id="stat-food">...</h2>
+      <p>Meals/Units Distributed</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Food Relief Platform. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Dynamic Navbar
+      const user = authHelper.getUser();
+      if (user) {
+        const navLinks = document.querySelector('.nav-links');
+        navLinks.innerHTML = `
+          <li><a href="#" onclick="authHelper.redirectBasedOnRole()">Dashboard</a></li>
+          <li><a href="#" id="logoutBtn" class="btn btn-outline">Logout</a></li>
+        `;
+        authHelper.setupLogoutButton();
+      }
+
+      // Fetch public stats
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        document.getElementById('stat-donations').textContent = data.totalDonations || 0;
+        document.getElementById('stat-completed').textContent = data.completedDonations || 0;
+        document.getElementById('stat-ngos').textContent = data.approvedNGOs || 0;
+        document.getElementById('stat-food').textContent = data.totalFoodDistributedApprox || 0;
+      } catch (err) {
+        console.error('Failed to load stats', err);
+      }
+    });
+  </script>
+</body>
+</html>

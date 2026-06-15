@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 
 // Serve static files from the client directory
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(path.join(__dirname, '../client/dist')));
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -52,9 +52,12 @@ app.get('/api/stats', async (req, res) => {
     const completedList = await Donation.find({ status: 'completed' }).select('quantity');
     let totalFoodDistributedUnits = 0;
     completedList.forEach(d => {
-      const match = d.quantity.match(/\d+/);
-      if (match) {
-        totalFoodDistributedUnits += parseInt(match[0], 10);
+      if (d.quantity) {
+        const qtyStr = String(d.quantity);
+        const match = qtyStr.match(/\d+/);
+        if (match) {
+          totalFoodDistributedUnits += parseInt(match[0], 10);
+        }
       }
     });
 
@@ -65,7 +68,8 @@ app.get('/api/stats', async (req, res) => {
       totalFoodDistributedApprox: totalFoodDistributedUnits
     });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error("Stats API Error:", err);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 

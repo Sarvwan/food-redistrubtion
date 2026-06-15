@@ -142,16 +142,17 @@ exports.getStats = async (req, res) => {
     const completedDonations = await Donation.countDocuments({ status: 'completed' });
     const approvedNGOs = await NGO.countDocuments({ approvalStatus: 'approved' });
 
-    // Since quantity is a string (e.g., "50 meals", "10 kg"), we approximate 
-    // total food distributed by parsing the first integer found in completed donations
     const completedList = await Donation.find({ status: 'completed' }).select('quantity');
     
     let totalFoodDistributedUnits = 0;
     
     completedList.forEach(d => {
-      const match = d.quantity.match(/\d+/);
-      if (match) {
-        totalFoodDistributedUnits += parseInt(match[0], 10);
+      if (d.quantity) {
+        const qtyStr = String(d.quantity);
+        const match = qtyStr.match(/\d+/);
+        if (match) {
+          totalFoodDistributedUnits += parseInt(match[0], 10);
+        }
       }
     });
 
@@ -162,7 +163,7 @@ exports.getStats = async (req, res) => {
       totalFoodDistributedApprox: totalFoodDistributedUnits
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error("Admin Stats Error:", err);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
