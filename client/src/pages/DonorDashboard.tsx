@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../lib/api';
 import { DashboardLayout } from '../components/layouts/DashboardLayout';
-import { PlusCircle, List, Image as ImageIcon, MapPin } from 'lucide-react';
+import { PlusCircle, List, Image as ImageIcon, MapPin, Settings, Map } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -108,19 +108,57 @@ export function DonorDashboard() {
     }
   };
 
+  // Settings state
+  const [settingsForm, setSettingsForm] = useState({ name: '', phone: '', address: '', email: '', role: '', password: '' });
+  const [hasPendingUpdates, setHasPendingUpdates] = useState(false);
+
+  useEffect(() => {
+    fetchApi('/auth/me').then(data => {
+      setSettingsForm({ 
+        name: data.name || '', 
+        phone: data.phone || '', 
+        address: data.address || '',
+        email: data.email || '',
+        role: data.role || 'donor',
+        password: ''
+      });
+      if (data.pendingProfileUpdates) {
+        setHasPendingUpdates(true);
+      }
+    });
+  }, []);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: any) => fetchApi('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Profile updated successfully');
+      if (data.pendingUpdates) {
+        setHasPendingUpdates(true);
+      }
+      setSettingsForm(prev => ({ ...prev, password: '' }));
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update profile')
+  });
+
+  const handleSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(settingsForm);
+  };
+
   const sidebarItems = [
-    { icon: List, label: 'My Donations', path: '/donor' },
-    { icon: PlusCircle, label: 'Post New', path: '#post' },
-    { icon: MapPin, label: 'Map View', path: '/donor/map' },
+    { icon: List, label: 'My Donations', id: 'list' },
+    { icon: PlusCircle, label: 'Post New', id: 'post' },
+    { icon: MapPin, label: 'Map View', id: 'map' },
+    { icon: Settings, label: 'Configuration', id: 'settings' }
   ];
 
   return (
-    <DashboardLayout title="Donor Dashboard" sidebarItems={sidebarItems}>
-      
-      <div className="flex space-x-2 mb-6 border-b border-slate-200 pb-2">
-        <button onClick={() => setActiveTab('list')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'list' ? 'bg-white text-emerald-700 shadow-sm border border-slate-200' : 'text-slate-600 hover:bg-slate-100'}`}>My Donations</button>
-        <button onClick={() => setActiveTab('post')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'post' ? 'bg-white text-emerald-700 shadow-sm border border-slate-200' : 'text-slate-600 hover:bg-slate-100'}`}>Post Donation</button>
-      </div>
+    <DashboardLayout 
+      title="Donor Dashboard" 
+      sidebarItems={sidebarItems}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
 
       {activeTab === 'list' && (
         <div className="space-y-4">
@@ -170,47 +208,125 @@ export function DonorDashboard() {
       )}
 
       {activeTab === 'post' && (
-        <Card className="max-w-2xl mx-auto border-0 shadow-xl shadow-slate-200/50 rounded-2xl">
+        <Card className="max-w-4xl mx-auto border-0 shadow-xl shadow-slate-200/50 rounded-2xl p-4 sm:p-8">
+          <CardHeader className="px-0 pt-0 pb-6 border-b border-slate-100 mb-6">
+            <CardTitle className="text-2xl font-bold text-slate-900">Post a New Donation</CardTitle>
+            <CardDescription className="text-base text-slate-500">Share your surplus food with the community.</CardDescription>
+          </CardHeader>
+          <CardContent className="px-0">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                <div className="space-y-2">
+                  <Label htmlFor="foodType" className="block text-sm font-semibold text-[#0F172A]">Food Type <span className="text-red-500">*</span></Label>
+                  <Input id="foodType" required value={formData.foodType} onChange={handleChange} placeholder="e.g. 50 boxes of cooked rice" className="w-full h-10 !bg-transparent !border-t-0 !border-x-0 !border-b-2 !border-b-[#CBD5E1] !px-0 text-[#0F172A] focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus:!border-b-[#10B981] focus-visible:!border-b-[#10B981] transition-colors duration-300 !rounded-none !shadow-none text-base focus-visible:!outline-none" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity" className="block text-sm font-semibold text-[#0F172A]">Quantity <span className="text-red-500">*</span></Label>
+                  <Input id="quantity" required value={formData.quantity} onChange={handleChange} placeholder="e.g. Serves 50" className="w-full h-10 !bg-transparent !border-t-0 !border-x-0 !border-b-2 !border-b-[#CBD5E1] !px-0 text-[#0F172A] focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus:!border-b-[#10B981] focus-visible:!border-b-[#10B981] transition-colors duration-300 !rounded-none !shadow-none text-base focus-visible:!outline-none" />
+                </div>
+                
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="pickupAddress" className="block text-sm font-semibold text-[#0F172A]">Pickup Address <span className="text-red-500">*</span></Label>
+                  <Input id="pickupAddress" required value={formData.pickupAddress} onChange={handleChange} placeholder="123 Main St..." className="w-full h-10 !bg-transparent !border-t-0 !border-x-0 !border-b-2 !border-b-[#CBD5E1] !px-0 text-[#0F172A] focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus:!border-b-[#10B981] focus-visible:!border-b-[#10B981] transition-colors duration-300 !rounded-none !shadow-none text-base focus-visible:!outline-none" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="availableFrom" className="block text-sm font-semibold text-[#0F172A]">Available From <span className="text-red-500">*</span></Label>
+                  <Input id="availableFrom" type="datetime-local" required value={formData.availableFrom} onChange={handleChange} className="w-full h-10 !bg-transparent !border-t-0 !border-x-0 !border-b-2 !border-b-[#CBD5E1] !px-0 text-[#0F172A] focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus:!border-b-[#10B981] focus-visible:!border-b-[#10B981] transition-colors duration-300 !rounded-none !shadow-none text-base focus-visible:!outline-none" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="availableTill" className="block text-sm font-semibold text-[#0F172A]">Available Till <span className="text-red-500">*</span></Label>
+                  <Input id="availableTill" type="datetime-local" required value={formData.availableTill} onChange={handleChange} className="w-full h-10 !bg-transparent !border-t-0 !border-x-0 !border-b-2 !border-b-[#CBD5E1] !px-0 text-[#0F172A] focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus:!border-b-[#10B981] focus-visible:!border-b-[#10B981] transition-colors duration-300 !rounded-none !shadow-none text-base focus-visible:!outline-none" />
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Label htmlFor="photos" className="block text-sm font-semibold text-[#0F172A]">Upload Photos (Optional)</Label>
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors">
+                  <Input id="photos" type="file" multiple accept="image/jpeg,image/png" ref={fileInputRef} onChange={(e) => setFiles(e.target.files)} className="hidden" />
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <ImageIcon className="h-10 w-10 text-slate-400" />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="mt-2 text-[#10B981] border-[#10B981] hover:bg-[#10B981]/10">
+                      Choose Files
+                    </Button>
+                    <p className="text-sm text-slate-500 mt-2">
+                      {files && files.length > 0 ? `${files.length} file(s) selected` : 'JPEG, PNG only. Max 10MB per file. Up to 5 photos.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <Button type="submit" className="w-full bg-gradient-to-r from-[#10B981] to-[#14B8A6] hover:from-[#059669] hover:to-[#0D9488] text-white rounded-full h-14 shadow-[0_4px_12px_rgba(16,185,129,0.2)] hover:shadow-[0_12px_30px_rgba(16,185,129,0.3)] transition-all duration-300 transform hover:-translate-y-0.5 text-lg font-semibold" disabled={postMutation.isPending}>
+                  {postMutation.isPending ? 'Submitting...' : 'Post Donation'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'map' && (
+        <Card className="border-0 shadow-sm shadow-slate-200/50 overflow-hidden">
           <CardHeader>
-            <CardTitle>Post a New Donation</CardTitle>
-            <CardDescription>Share your surplus food with the community.</CardDescription>
+            <CardTitle>Donation Radar Map</CardTitle>
+            <CardDescription>View your active donations on the geospatial grid.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 relative h-[500px] bg-slate-100 flex flex-col items-center justify-center">
+            <Map className="w-16 h-16 text-slate-300 mb-4" />
+            <h3 className="text-lg font-medium text-slate-500">Map Integration Offline</h3>
+            <p className="text-sm text-slate-400 max-w-md text-center mt-2">
+              Geospatial radar is currently operating in headless mode. Map tiles require a valid Maps API Key configuration.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'settings' && (
+        <Card className="max-w-2xl mx-auto border-0 shadow-sm shadow-slate-200/50">
+          <CardHeader>
+            <CardTitle>Configuration</CardTitle>
+            <CardDescription>Update your donor profile details.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="foodType">Food Type</Label>
-                  <Input id="foodType" required value={formData.foodType} onChange={handleChange} placeholder="e.g. 50 boxes of cooked rice" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantity</Label>
-                  <Input id="quantity" required value={formData.quantity} onChange={handleChange} placeholder="e.g. Serves 50" />
-                </div>
+            {hasPendingUpdates && (
+              <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded relative">
+                <strong className="font-bold">Pending Approval! </strong>
+                <span className="block sm:inline">Your recent profile updates are pending admin approval. You can still change your password immediately.</span>
               </div>
-              
+            )}
+            <form onSubmit={handleSettingsSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pickupAddress">Pickup Address</Label>
-                <Input id="pickupAddress" required value={formData.pickupAddress} onChange={handleChange} placeholder="123 Main St..." />
+                <Label htmlFor="email">Email Address (Read-only)</Label>
+                <Input id="email" readOnly disabled value={settingsForm.email} className="bg-slate-50" />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="availableFrom">Available From</Label>
-                  <Input id="availableFrom" type="datetime-local" required value={formData.availableFrom} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="availableTill">Available Till</Label>
-                  <Input id="availableTill" type="datetime-local" required value={formData.availableTill} onChange={handleChange} />
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <Label htmlFor="photos">Upload Photos (Optional)</Label>
-                <Input id="photos" type="file" multiple accept="image/*" ref={fileInputRef} onChange={(e) => setFiles(e.target.files)} className="bg-slate-50 cursor-pointer" />
+                <Label htmlFor="role">Account Role (Read-only)</Label>
+                <Input id="role" readOnly disabled value={settingsForm.role} className="bg-slate-50 uppercase" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Organization / Full Name</Label>
+                <Input id="name" required value={settingsForm.name} onChange={e => setSettingsForm({...settingsForm, name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" value={settingsForm.phone} onChange={e => setSettingsForm({...settingsForm, phone: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Default Pickup Address</Label>
+                <Input id="address" value={settingsForm.address} onChange={e => setSettingsForm({...settingsForm, address: e.target.value})} />
               </div>
 
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={postMutation.isPending}>
-                {postMutation.isPending ? 'Submitting...' : 'Post Donation'}
+              <div className="pt-4 pb-2 border-t border-slate-100 mt-6">
+                <h3 className="text-lg font-medium text-slate-900 mb-4">Security</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="password">New Password</Label>
+                  <Input id="password" type="password" placeholder="Leave blank to keep current password" value={settingsForm.password} onChange={e => setSettingsForm({...settingsForm, password: e.target.value})} />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700" disabled={updateProfileMutation.isPending}>
+                {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </form>
           </CardContent>

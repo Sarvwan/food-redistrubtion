@@ -20,8 +20,37 @@ app.use(mongoSanitize());
 
 // Serve static files from the client directory
 app.use(express.static(path.join(__dirname, '../client/dist')));
-// Serve static uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// GridFS Image serving endpoint
+const mongoose = require('mongoose');
+app.get('/api/images/:filename', async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+    const bucket = new mongoose.mongo.GridFSBucket(db, {
+      bucketName: 'photos'
+    });
+
+    const files = await bucket.find({ filename: req.params.filename }).toArray();
+    if (!files || files.length === 0) {
+      return res.status(404).json({ err: 'No file exists' });
+    }
+
+    // Set proper content type based on extension or mime
+    const file = files[0];
+    if (file.contentType) {
+      res.set('Content-Type', file.contentType);
+    }
+    
+    // Create read stream
+    const readStream = bucket.openDownloadStreamByName(file.filename);
+    readStream.pipe(res);
+  } catch (err) {
+    res.status(500).json({ err: 'Server error retrieving file' });
+  }
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));

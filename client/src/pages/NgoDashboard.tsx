@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../lib/api';
 import { DashboardLayout } from '../components/layouts/DashboardLayout';
-import { Search, ClipboardList, CheckCircle, Camera } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
+import { Search, ClipboardList, CheckCircle, Camera, Settings } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -90,14 +90,55 @@ export function NgoDashboard() {
     }
   };
 
+  // Settings state
+  const [settingsForm, setSettingsForm] = useState({ name: '', phone: '', address: '', organizationName: '', registrationNumber: '', email: '', role: '', password: '', category: '' });
+  const [hasPendingUpdates, setHasPendingUpdates] = useState(false);
+
+  useEffect(() => {
+    fetchApi('/auth/me').then(data => {
+      setSettingsForm({ 
+        name: data.name || '', 
+        phone: data.phone || '', 
+        address: data.address || '',
+        organizationName: data.ngoDetails?.organizationName || '',
+        registrationNumber: data.ngoDetails?.registrationNumber || '',
+        email: data.email || '',
+        role: data.role || 'ngo',
+        password: '',
+        category: data.ngoDetails?.category || ''
+      });
+      if (data.pendingProfileUpdates) {
+        setHasPendingUpdates(true);
+      }
+    });
+  }, []);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: any) => fetchApi('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Profile updated successfully');
+      if (data.pendingUpdates) {
+        setHasPendingUpdates(true);
+      }
+      setSettingsForm(prev => ({ ...prev, password: '' }));
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update profile')
+  });
+
+  const handleSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(settingsForm);
+  };
+
   const sidebarItems = [
-    { icon: Search, label: 'Find Food', path: '/ngo' },
-    { icon: ClipboardList, label: 'My Claims', path: '#claims' },
+    { icon: Search, label: 'Find Food', id: 'available' },
+    { icon: ClipboardList, label: 'My Claims', id: 'claims' },
+    { icon: Settings, label: 'Configuration', id: 'settings' }
   ];
 
   if (isPendingApproval) {
     return (
-      <DashboardLayout title="NGO Dashboard" sidebarItems={sidebarItems}>
+      <DashboardLayout title="NGO Dashboard" sidebarItems={sidebarItems} activeTab={activeTab} onTabChange={setActiveTab}>
         <div className="bg-amber-50 border border-amber-200 text-amber-800 p-6 rounded-lg text-center shadow-sm">
           <h2 className="text-xl font-bold mb-2">Account Pending Approval</h2>
           <p>Your NGO account is currently under review by our admins. You will be able to claim donations once approved.</p>
@@ -107,12 +148,12 @@ export function NgoDashboard() {
   }
 
   return (
-    <DashboardLayout title="NGO Dashboard" sidebarItems={sidebarItems}>
-      
-      <div className="flex space-x-2 mb-6 border-b border-slate-200 pb-2">
-        <button onClick={() => setActiveTab('available')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'available' ? 'bg-white text-emerald-700 shadow-sm border border-slate-200' : 'text-slate-600 hover:bg-slate-100'}`}>Available Donations</button>
-        <button onClick={() => setActiveTab('claims')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'claims' ? 'bg-white text-emerald-700 shadow-sm border border-slate-200' : 'text-slate-600 hover:bg-slate-100'}`}>My Active Claims</button>
-      </div>
+    <DashboardLayout 
+      title="NGO Dashboard" 
+      sidebarItems={sidebarItems}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
 
       {/* Available Donations */}
       {activeTab === 'available' && (
@@ -229,6 +270,79 @@ export function NgoDashboard() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Settings Tab */}
+      {activeTab === 'settings' && (
+        <Card className="max-w-2xl mx-auto border-0 shadow-sm shadow-slate-200/50">
+          <CardHeader>
+            <CardTitle>Configuration</CardTitle>
+            <CardDescription>Update your NGO profile and contact details.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {hasPendingUpdates && (
+              <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded relative">
+                <strong className="font-bold">Pending Approval! </strong>
+                <span className="block sm:inline">Your recent profile updates are pending admin approval. You can still change your password immediately.</span>
+              </div>
+            )}
+            <form onSubmit={handleSettingsSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address (Read-only)</Label>
+                  <Input id="email" readOnly disabled value={settingsForm.email} className="bg-slate-50" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Account Role (Read-only)</Label>
+                  <Input id="role" readOnly disabled value={settingsForm.role} className="bg-slate-50 uppercase" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="organizationName">Organization Name</Label>
+                  <Input id="organizationName" required value={settingsForm.organizationName} onChange={e => setSettingsForm({...settingsForm, organizationName: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registrationNumber">Registration Number</Label>
+                  <Input id="registrationNumber" required value={settingsForm.registrationNumber} onChange={e => setSettingsForm({...settingsForm, registrationNumber: e.target.value})} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">NGO Category</Label>
+                <select id="category" value={settingsForm.category} onChange={e => setSettingsForm({...settingsForm, category: e.target.value})} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value="orphanage">Orphanage</option>
+                  <option value="old_age_home">Old Age Home</option>
+                  <option value="school">School</option>
+                  <option value="general_ngo">General NGO</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Primary Contact Name</Label>
+                <Input id="name" required value={settingsForm.name} onChange={e => setSettingsForm({...settingsForm, name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Contact Phone Number</Label>
+                <Input id="phone" value={settingsForm.phone} onChange={e => setSettingsForm({...settingsForm, phone: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Registered Address</Label>
+                <Input id="address" value={settingsForm.address} onChange={e => setSettingsForm({...settingsForm, address: e.target.value})} />
+              </div>
+
+              <div className="pt-4 pb-2 border-t border-slate-100 mt-6">
+                <h3 className="text-lg font-medium text-slate-900 mb-4">Security</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="password">New Password</Label>
+                  <Input id="password" type="password" placeholder="Leave blank to keep current password" value={settingsForm.password} onChange={e => setSettingsForm({...settingsForm, password: e.target.value})} />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700" disabled={updateProfileMutation.isPending}>
+                {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
     </DashboardLayout>

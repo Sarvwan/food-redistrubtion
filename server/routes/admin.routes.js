@@ -28,8 +28,23 @@ router.patch('/reject-ngo/:ngoId', adminController.rejectNGO);
 router.get('/all-donations', adminController.getAllDonations);
 
 // @route   GET api/admin/stats
-// @desc    Get top-level metrics
+// @desc    Get platform stats
 // @access  Private (Admin)
 router.get('/stats', adminController.getStats);
+
+// @route   GET api/admin/pending-updates
+// @desc    Get all pending profile updates
+// @access  Private (Admin)
+router.get('/pending-updates', adminController.getPendingProfileUpdates);
+
+// @route   POST api/admin/pending-updates/:userId/approve
+// @desc    Approve profile update
+// @access  Private (Admin)
+router.post('/pending-updates/:userId/approve', adminController.approveProfileUpdate);
+
+// @route   POST api/admin/pending-updates/:userId/reject
+// @desc    Reject profile update
+// @access  Private (Admin)
+router.post('/pending-updates/:userId/reject', adminController.rejectProfileUpdate);
 
 module.exports = router;

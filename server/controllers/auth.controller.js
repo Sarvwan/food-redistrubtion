@@ -134,3 +134,70 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
+
+// Update User Profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, address, organizationName, registrationNumber, category, password } = req.body;
+    
+    // Find user
+    let user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let passwordChanged = false;
+    // Handle immediate password change
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+      passwordChanged = true;
+    }
+
+    if (user.role === 'admin') {
+      if (name) user.name = name;
+      if (phone) user.phone = phone;
+      if (address) user.address = address;
+      await user.save();
+      return res.status(200).json({ message: passwordChanged ? 'Password and profile updated successfully' : 'Profile updated successfully', user: { id: user._id, role: user.role, name: user.name } });
+    }
+
+    // For Donors and NGOs, store other fields in pendingProfileUpdates
+    const updates = {};
+    if (name && name !== user.name) updates.name = name;
+    if (phone && phone !== user.phone) updates.phone = phone;
+    if (address && address !== user.address) updates.address = address;
+    
+    if (user.role === 'ngo') {
+      let ngo = await NGO.findOne({ userId: user._id });
+      if (ngo) {
+        if (organizationName && organizationName !== ngo.organizationName) updates.organizationName = organizationName;
+        if (registrationNumber && registrationNumber !== ngo.registrationNumber) updates.registrationNumber = registrationNumber;
+        if (category && category !== ngo.category) updates.category = category;
+      }
+    }
+
+    let isPending = false;
+    if (Object.keys(updates).length > 0) {
+      user.pendingProfileUpdates = updates;
+      isPending = true;
+    }
+
+    await user.save();
+
+    let msg = 'Profile updated successfully';
+    if (isPending && passwordChanged) msg = 'Password changed successfully. Other profile updates are pending admin approval.';
+    else if (isPending) msg = 'Profile updates are pending admin approval.';
+    else if (passwordChanged) msg = 'Password changed successfully.';
+
+    res.status(200).json({ 
+       message: msg, 
+       user: { id: user._id, role: user.role, name: user.name },
+       pendingUpdates: user.pendingProfileUpdates 
+    });
+  } catch (err) {
+    console.error("Profile Update Error:", err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+};
+

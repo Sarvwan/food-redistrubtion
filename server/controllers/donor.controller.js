@@ -15,7 +15,7 @@ exports.createDonation = async (req, res) => {
 
   try {
     // req.files is populated by multer upload middleware
-    const photoPaths = req.files ? req.files.map(file => `/uploads/food-photos/${file.filename}`) : [];
+    const photoPaths = req.files ? req.files.map(file => `/api/images/${file.filename}`) : [];
 
     const coordinates = [
       parseFloat(longitude),

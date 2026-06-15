@@ -1,62 +1,40 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const { GridFsStorage } = require('multer-gridfs-storage');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-// Ensure directories exist
-const createDirIfNotExists = dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-};
+// Create storage engine using GridFS
+const storage = new GridFsStorage({
+  url: process.env.MONGO_URI || 'mongodb://localhost:27017/food_relief',
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      const allowedFileTypes = /jpeg|jpg|png/;
+      const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = allowedFileTypes.test(file.mimetype);
 
-const foodPhotosDir = path.join(__dirname, '../../uploads/food-photos');
-const proofPhotosDir = path.join(__dirname, '../../uploads/proof-photos');
-
-createDirIfNotExists(foodPhotosDir);
-createDirIfNotExists(proofPhotosDir);
-
-// Storage for food photos
-const foodStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, foodPhotosDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname.replace(/\\s+/g, '-')}`);
-  }
-});
-
-// Storage for proof photos
-const proofStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, proofPhotosDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname.replace(/\\s+/g, '-')}`);
+      if (mimetype && extname) {
+        const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
+        const fileInfo = {
+          filename: filename,
+          bucketName: 'photos' // Collection name will be photos.files and photos.chunks
+        };
+        resolve(fileInfo);
+      } else {
+        reject(new Error('Only images (jpeg, jpg, png) are allowed!'));
+      }
+    });
   }
 });
-
-const fileFilter = (req, file, cb) => {
-  const allowedFileTypes = /jpeg|jpg|png/;
-  const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedFileTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb(new Error('Only images (jpeg, jpg, png) are allowed!'));
-  }
-};
 
 const uploadFood = multer({
-  storage: foodStorage,
-  limits: { fileSize: 5000000 }, // 5MB limit
-  fileFilter: fileFilter
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 const uploadProof = multer({
-  storage: proofStorage,
-  limits: { fileSize: 5000000 },
-  fileFilter: fileFilter
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 module.exports = { uploadFood, uploadProof };

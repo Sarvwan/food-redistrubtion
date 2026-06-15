@@ -45,12 +45,24 @@ router.post(
 // @access  Private
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    let user = await User.findById(req.user.id).select('-password').lean();
+    if (user && user.role === 'ngo') {
+      const NGOModel = require('../models/NGO');
+      const ngoDetails = await NGOModel.findOne({ userId: user._id }).lean();
+      if (ngoDetails) {
+        user = { ...user, ngoDetails };
+      }
+    }
     res.json(user);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
+
+// @route   PATCH api/auth/profile
+// @desc    Update user profile
+// @access  Private
+router.patch('/profile', auth, authController.updateProfile);
 
 module.exports = router;

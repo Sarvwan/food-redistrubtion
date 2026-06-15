@@ -167,3 +167,67 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
+
+// Get all pending profile updates
+exports.getPendingProfileUpdates = async (req, res) => {
+  try {
+    const users = await User.find({ pendingProfileUpdates: { $ne: null } })
+      .select('name email role pendingProfileUpdates');
+    res.json(users);
+  } catch (err) {
+    console.error("Get Pending Updates Error:", err);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Approve profile update
+exports.approveProfileUpdate = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user || !user.pendingProfileUpdates) {
+      return res.status(404).json({ msg: 'No pending updates found for this user' });
+    }
+
+    const updates = user.pendingProfileUpdates;
+
+    if (updates.name) user.name = updates.name;
+    if (updates.phone) user.phone = updates.phone;
+    if (updates.address) user.address = updates.address;
+
+    if (user.role === 'ngo') {
+      let ngo = await NGO.findOne({ userId: user._id });
+      if (ngo) {
+        if (updates.organizationName) ngo.organizationName = updates.organizationName;
+        if (updates.registrationNumber) ngo.registrationNumber = updates.registrationNumber;
+        if (updates.category) ngo.category = updates.category;
+        await ngo.save();
+      }
+    }
+
+    user.pendingProfileUpdates = null;
+    await user.save();
+
+    res.json({ msg: 'Profile update approved', user: { id: user._id, role: user.role, name: user.name } });
+  } catch (err) {
+    console.error("Approve Profile Update Error:", err);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Reject profile update
+exports.rejectProfileUpdate = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user || !user.pendingProfileUpdates) {
+      return res.status(404).json({ msg: 'No pending updates found for this user' });
+    }
+
+    user.pendingProfileUpdates = null;
+    await user.save();
+
+    res.json({ msg: 'Profile update rejected' });
+  } catch (err) {
+    console.error("Reject Profile Update Error:", err);
+    res.status(500).send('Server Error');
+  }
+};

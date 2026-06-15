@@ -145,7 +145,7 @@ exports.submitProof = async (req, res) => {
       return res.status(400).json({ msg: 'Please upload between 2 and 5 photos as proof' });
     }
 
-    const photoPaths = req.files.map(file => `/uploads/proof-photos/${file.filename}`);
+    const photoPaths = req.files.map(file => `/api/images/${file.filename}`);
 
     const proof = new ProofSubmission({
       donationId: donation._id,

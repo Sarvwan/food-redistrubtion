@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../lib/api';
 import { DashboardLayout } from '../components/layouts/DashboardLayout';
-import { LayoutDashboard, Users, Package, Check, X } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { LayoutDashboard, Users, Package, Check, X, Settings, UserCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 
 export function AdminDashboard() {
@@ -25,6 +27,11 @@ export function AdminDashboard() {
   const { data: allDonations } = useQuery({
     queryKey: ['allDonations'],
     queryFn: () => fetchApi('/admin/all-donations')
+  });
+
+  const { data: profileUpdates } = useQuery({
+    queryKey: ['profileUpdates'],
+    queryFn: () => fetchApi('/admin/pending-updates')
   });
 
   // Mutations
@@ -51,6 +58,24 @@ export function AdminDashboard() {
     onError: () => toast.error('Failed to reject NGO')
   });
 
+  const approveProfileMutation = useMutation({
+    mutationFn: (id: string) => fetchApi(`/admin/pending-updates/${id}/approve`, { method: 'POST' }),
+    onSuccess: () => {
+      toast.success('Profile update approved');
+      queryClient.invalidateQueries({ queryKey: ['profileUpdates'] });
+    },
+    onError: () => toast.error('Failed to approve profile update')
+  });
+
+  const rejectProfileMutation = useMutation({
+    mutationFn: (id: string) => fetchApi(`/admin/pending-updates/${id}/reject`, { method: 'POST' }),
+    onSuccess: () => {
+      toast.success('Profile update rejected');
+      queryClient.invalidateQueries({ queryKey: ['profileUpdates'] });
+    },
+    onError: () => toast.error('Failed to reject profile update')
+  });
+
   const handleApprove = (id: string) => {
     if (window.confirm('Approve this NGO?')) {
       approveMutation.mutate(id);
@@ -65,13 +90,38 @@ export function AdminDashboard() {
   };
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
-    { icon: Users, label: 'NGO Approvals', path: '#approvals' },
-    { icon: Package, label: 'All Donations', path: '#donations' },
+    { icon: LayoutDashboard, label: 'Overview', id: 'overview' },
+    { icon: Package, label: 'All Donations', id: 'donations' },
+    { icon: UserCheck, label: 'Profile Approvals', id: 'approvals' },
+    { icon: Settings, label: 'Configuration', id: 'settings' }
   ];
 
+  // Settings state
+  const [settingsForm, setSettingsForm] = useState({ password: '' });
+  useEffect(() => {
+  }, []);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: any) => fetchApi('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    onSuccess: () => {
+      toast.success('Profile updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update profile')
+  });
+
+  const handleSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(settingsForm);
+  };
+
   return (
-    <DashboardLayout title="Admin Dashboard" sidebarItems={sidebarItems}>
+    <DashboardLayout 
+      title="Admin Dashboard" 
+      sidebarItems={sidebarItems} 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+    >
       
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -90,12 +140,6 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex space-x-2 mb-6 border-b border-slate-200 pb-2">
-        <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'overview' ? 'bg-white text-emerald-700 shadow-sm border border-slate-200' : 'text-slate-600 hover:bg-slate-100'}`}>Pending Approvals</button>
-        <button onClick={() => setActiveTab('donations')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'donations' ? 'bg-white text-emerald-700 shadow-sm border border-slate-200' : 'text-slate-600 hover:bg-slate-100'}`}>Donation Log</button>
       </div>
 
       {/* Tab Content */}
@@ -186,6 +230,69 @@ export function AdminDashboard() {
             </div>
           )}
         </div>
+      )}
+
+      {activeTab === 'approvals' && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Profile Updates Pending Approval</h2>
+          {(!profileUpdates || profileUpdates.length === 0) ? (
+            <div className="bg-white p-8 rounded-lg border border-slate-200 text-center text-slate-500">
+              No profile updates are pending approval.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {profileUpdates.map((user: any) => (
+                <Card key={user._id} className="border-slate-200 shadow-sm overflow-hidden">
+                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{user.name} ({user.email})</h3>
+                      <p className="text-xs text-slate-500 mt-1 uppercase">Role: {user.role}</p>
+                    </div>
+                  </div>
+                  <CardContent className="p-6">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Requested Changes:</h4>
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 text-sm mb-6">
+                      {Object.entries(user.pendingProfileUpdates || {}).map(([key, value]) => (
+                        <div key={key}>
+                          <dt className="text-slate-500 font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</dt>
+                          <dd className="text-slate-900 mt-1 font-semibold text-emerald-600">{String(value)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <div className="flex gap-3 pt-4 border-t border-slate-100">
+                      <Button onClick={() => approveProfileMutation.mutate(user._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={approveProfileMutation.isPending}>
+                        <Check className="h-4 w-4 mr-2" /> Approve Changes
+                      </Button>
+                      <Button onClick={() => rejectProfileMutation.mutate(user._id)} variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" disabled={rejectProfileMutation.isPending}>
+                        <X className="h-4 w-4 mr-2" /> Reject
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <Card className="max-w-2xl mx-auto border-0 shadow-sm shadow-slate-200/50">
+          <CardHeader>
+            <CardTitle>Configuration</CardTitle>
+            <CardDescription>Update your administrator password.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSettingsSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">New Password</Label>
+                <Input id="password" type="password" required placeholder="Enter new password" value={settingsForm.password} onChange={e => setSettingsForm({ password: e.target.value })} />
+              </div>
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={updateProfileMutation.isPending}>
+                {updateProfileMutation.isPending ? 'Saving...' : 'Change Password'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
     </DashboardLayout>

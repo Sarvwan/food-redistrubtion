@@ -57,6 +57,29 @@ sequenceDiagram
 > 3. **Admin Audit:** A platform Administrator reviews the submitted credentials via the Admin Control Panel.
 > 4. **Authorization:** Upon approval, the account permissions are elevated, granting access to the geospatial claim system.
 
+## FEATURES
+
+### For Donors (Restaurants, Event Organizers, Individuals)
+- **Dashboard Tracking:** Track posted donations and their current statuses (Open, Pending, Completed).
+- **Post Donations:** Easily submit surplus food details (Food Type, Quantity, Pickup Address, Availability Window).
+- **Multiple Image Uploads:** Attach up to 5 photos of the food for verification (powered by MongoDB GridFS).
+- **Proof of Distribution:** View photographic proof uploaded by NGOs once the food is successfully distributed.
+- **Profile Management:** Submit updates to organization/contact details securely (requires Admin approval).
+- **Secure Password Management:** Instantly update account passwords.
+
+### For NGOs (Verified Organizations)
+- **Geospatial Discovery:** Discover open donations nearby based on pickup location.
+- **Claim & Collect Workflow:** Securely claim donations to lock them, and mark them as collected upon physical pickup.
+- **Distribution Proofs:** Upload photographic evidence of the food being distributed to communities, ensuring total transparency.
+- **Account Verification:** Platform access is gated by Admin approval to ensure the legitimacy of receiving organizations.
+- **Profile Updates:** Request changes to registration details (NGO Name, Category, Registration ID) seamlessly.
+
+### For Administrators
+- **Platform Analytics:** View top-level metrics including total donations, completed deliveries, approved NGOs, and meals distributed.
+- **Entity Verification:** Review, approve, or reject new NGO registrations to maintain platform integrity.
+- **Profile Approvals:** A centralized queue to review, approve, or reject profile detail changes requested by existing Donors and NGOs.
+- **Donation Audit Log:** View a complete list of all donations on the platform along with their current statuses.
+
 ## ARCHITECTURE & STACK
 
 ```mermaid

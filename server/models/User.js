@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
     coordinates: { type: [Number] }
   },
   isVerified: { type: Boolean, default: false },
+  pendingProfileUpdates: { type: mongoose.Schema.Types.Mixed, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 
