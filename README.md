@@ -79,6 +79,23 @@ npm run dev
 
 The application client will securely connect to the local API gateway.
 
+## SYSTEM WORKFLOWS
+
+The platform operates on a strictly defined lifecycle to ensure food safety, transparency, and accountability.
+
+### 1. The Redistribution Lifecycle
+1. **Surplus Registration:** A registered Donor (e.g., restaurant, supermarket) logs a surplus manifest, detailing food type, quantity, and expiration window.
+2. **Geospatial Broadcast:** The system computes a 15km radius using MongoDB 2dsphere indexing and alerts verified NGOs within the proximity.
+3. **Claim Protocol:** An authorized NGO reviews the manifest and issues a lock (claim) on the donation, preventing overlapping requests.
+4. **Logistics & Collection:** The NGO physically retrieves the surplus from the Donor's registered coordinates.
+5. **Audit & Verification:** Upon collection, the NGO uploads photographic proof of delivery/collection to finalize the transaction state.
+
+### 2. Entity Verification Workflow
+1. **Registration:** An NGO submits organizational credentials via the registration gateway.
+2. **Pending State:** The account is placed in a cryptographic hold, restricting API access to public routes only.
+3. **Admin Audit:** A platform Administrator reviews the submitted credentials via the Admin Control Panel.
+4. **Authorization:** Upon approval, the account permissions are elevated, granting access to the geospatial claim system.
+
 ## API REFERENCE
 
 All endpoints expect and return `application/json` payloads. Authenticated routes require a standard Bearer token in the Authorization header.
