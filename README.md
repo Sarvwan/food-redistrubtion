@@ -12,9 +12,34 @@
 
 <br />
 
-## OVERVIEW
+## WHAT IS IT?
+> [!NOTE]
+> **Sarvwan** is a high-performance logistics and redistribution platform designed to bridge the gap between food surplus entities and verified Non-Governmental Organizations (NGOs). 
+> 
+> By leveraging geospatial indexing and real-time data, the architecture ensures rapid, traceable, and secure food allocation.
 
-Sarvwan is a high-performance logistics and redistribution platform designed to bridge the gap between food surplus entities and verified Non-Governmental Organizations (NGOs). By leveraging geospatial indexing and real-time data, the architecture ensures rapid, traceable, and secure food allocation.
+## WHY IS IT?
+> [!IMPORTANT]
+> **The Problem:** Globally, immense amounts of perfectly edible food are wasted daily by restaurants and event organizers, while local communities simultaneously face food insecurity.
+>
+> **The Solution:** Sarvwan eliminates the logistical friction of food donation. It provides a zero-latency geospatial matching system so that the moment surplus food becomes available, nearby verified NGOs are instantly notified and can coordinate a rapid pickup.
+
+## SYSTEM WORKFLOWS
+
+> [!TIP]
+> ### 1. The Redistribution Lifecycle
+> 1. **Surplus Registration:** A registered Donor logs a surplus manifest (food type, quantity, expiration window).
+> 2. **Geospatial Broadcast:** The system computes a 15km radius using MongoDB 2dsphere indexing and alerts verified NGOs within proximity.
+> 3. **Claim Protocol:** An authorized NGO reviews the manifest and issues a lock (claim) on the donation, preventing overlapping requests.
+> 4. **Logistics & Collection:** The NGO physically retrieves the surplus from the Donor's registered coordinates.
+> 5. **Audit & Verification:** Upon collection, the NGO uploads photographic proof of delivery/collection to finalize the transaction state.
+
+> [!WARNING]
+> ### 2. Entity Verification Workflow
+> 1. **Registration:** An NGO submits organizational credentials via the registration gateway.
+> 2. **Pending State:** The account is placed in a cryptographic hold, restricting API access to public routes only.
+> 3. **Admin Audit:** A platform Administrator reviews the submitted credentials via the Admin Control Panel.
+> 4. **Authorization:** Upon approval, the account permissions are elevated, granting access to the geospatial claim system.
 
 ## ARCHITECTURE & STACK
 
@@ -78,60 +103,6 @@ npm run dev
 ```
 
 The application client will securely connect to the local API gateway.
-
-## SYSTEM WORKFLOWS
-
-The platform operates on a strictly defined lifecycle to ensure food safety, transparency, and accountability.
-
-### 1. The Redistribution Lifecycle
-1. **Surplus Registration:** A registered Donor (e.g., restaurant, supermarket) logs a surplus manifest, detailing food type, quantity, and expiration window.
-2. **Geospatial Broadcast:** The system computes a 15km radius using MongoDB 2dsphere indexing and alerts verified NGOs within the proximity.
-3. **Claim Protocol:** An authorized NGO reviews the manifest and issues a lock (claim) on the donation, preventing overlapping requests.
-4. **Logistics & Collection:** The NGO physically retrieves the surplus from the Donor's registered coordinates.
-5. **Audit & Verification:** Upon collection, the NGO uploads photographic proof of delivery/collection to finalize the transaction state.
-
-### 2. Entity Verification Workflow
-1. **Registration:** An NGO submits organizational credentials via the registration gateway.
-2. **Pending State:** The account is placed in a cryptographic hold, restricting API access to public routes only.
-3. **Admin Audit:** A platform Administrator reviews the submitted credentials via the Admin Control Panel.
-4. **Authorization:** Upon approval, the account permissions are elevated, granting access to the geospatial claim system.
-
-## API REFERENCE
-
-All endpoints expect and return `application/json` payloads. Authenticated routes require a standard Bearer token in the Authorization header.
-
-### Authentication & Identity
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `POST` | `/api/auth/register` | Provision new entity | Public |
-| `POST` | `/api/auth/login` | Authenticate and retrieve JWT | Public |
-| `GET` | `/api/auth/me` | Retrieve entity profile | Restricted |
-
-### Donor Operations
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `POST` | `/api/donor/post` | Initialize surplus record | Donor |
-| `GET` | `/api/donor/my-donations` | Fetch historical records | Donor |
-| `GET` | `/api/donor/donation/:id` | Fetch specific manifest | Donor |
-| `PATCH` | `/api/donor/donation/:id/cancel`| Abort surplus allocation | Donor |
-
-### NGO Operations
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET` | `/api/ngo/available-donations` | Geospatial fetch (15km radius) | NGO |
-| `GET` | `/api/ngo/my-claims` | Fetch claimed manifests | NGO |
-| `POST` | `/api/ngo/claim/:donationId` | Lock surplus allocation | NGO |
-| `PATCH` | `/api/ngo/collect/:donationId` | Finalize collection | NGO |
-| `POST` | `/api/ngo/proof/:donationId` | Upload audit documentation | NGO |
-
-### Administrative Controls
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET` | `/api/admin/pending-ngos` | Audit unverified NGOs | Admin |
-| `PATCH` | `/api/admin/approve-ngo/:id` | Authorize NGO entity | Admin |
-| `PATCH` | `/api/admin/reject-ngo/:id` | Terminate NGO entity | Admin |
-| `GET` | `/api/admin/all-donations` | Global manifest view | Admin |
-| `GET` | `/api/admin/stats` | System metrics retrieval | Admin |
 
 <br />
 <div align="center">
