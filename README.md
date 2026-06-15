@@ -26,6 +26,22 @@
 
 ## SYSTEM WORKFLOWS
 
+```mermaid
+sequenceDiagram
+    participant Donor
+    participant System
+    participant NGO
+
+    Donor->>System: Post Food Surplus (Location, Details)
+    System->>System: 2dsphere Geo-Query (15km radius)
+    System-->>NGO: Alert Available Food
+    NGO->>System: Claim Donation
+    System-->>Donor: Update Status (Claimed)
+    NGO->>Donor: Physical Pickup
+    NGO->>System: Upload Delivery Proof
+    System-->>Donor: Update Status (Completed)
+```
+
 > [!TIP]
 > ### 1. The Redistribution Lifecycle
 > 1. **Surplus Registration:** A registered Donor logs a surplus manifest (food type, quantity, expiration window).
@@ -42,6 +58,16 @@
 > 4. **Authorization:** Upon approval, the account permissions are elevated, granting access to the geospatial claim system.
 
 ## ARCHITECTURE & STACK
+
+```mermaid
+graph TD
+    Client[React & Tailwind Client] -->|REST API| Gateway[Express Server]
+    Gateway --> Auth[JWT Authentication]
+    Gateway --> Geo[Geospatial Matching Engine]
+    Auth --> DB[(MongoDB Atlas)]
+    Geo --> DB
+    Gateway --> Mail[Nodemailer Integration]
+```
 
 The platform is engineered using a decoupled client-server model, ensuring scalability and strict separation of concerns.
 
