@@ -1,144 +1,123 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/heart-handshake.svg" width="80" alt="Logo">
-  <h1>Sarvwan Food Relief Platform</h1>
-  <p>A full-stack MERN application connecting food donors with verified NGOs to minimize food waste, track logistics, and support communities.</p>
-  
-  <p>
-    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
-    <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
-  </p>
+  <br />
+  <h3>SARVWAN FOOD RELIEF</h3>
+  <p>An enterprise-grade logistics and coordination platform designed to eliminate food waste through precise, real-time NGO matchmaking.</p>
 </div>
 
 <br />
 
-## ✨ Features
-- **🌍 Real-Time Geospatial Matching:** Donors are matched with NGOs within a 15km radius using MongoDB 2dsphere indexes.
-- **🔐 Secure Authentication:** JWT-based secure sessions with role-based access control (Admin, NGO, Donor).
-- **📱 Premium UI/UX:** Built with React, Tailwind CSS v4, and Shadcn UI for a stunning, responsive, and accessible user experience.
-- **🛡️ NGO Verification System:** Admin dashboard to approve and manage registered NGOs.
-- **📸 Delivery Proof Upload:** NGOs can upload delivery proof photos to maintain transparency and trust.
+## OVERVIEW
 
-## 🛠️ Tech Stack
+Sarvwan is a full-stack distributed system built to seamlessly bridge the gap between food donors and verified non-governmental organizations (NGOs). By leveraging geospatial indexing and role-based authentication, the platform ensures rapid, secure, and transparent reallocation of surplus resources to communities in need.
 
-**Frontend**
-- React 18 (Vite)
-- Tailwind CSS v4
-- Shadcn UI (Radix Primitives)
-- React Router DOM
-- Zustand (State Management)
-- Sonner (Toast Notifications)
+<br />
 
-**Backend**
-- Node.js & Express.js
-- MongoDB & Mongoose
-- JSON Web Tokens (JWT) & bcryptjs
-- Helmet.js & express-rate-limit (Security)
-- Nodemailer (Email Alerts)
+## ARCHITECTURE & STACK
 
----
+The platform is engineered on a modern, high-performance stack prioritizing scalability, security, and exceptional user experience.
 
-## 🚀 Setup & Installation
+### Client
+- **Framework:** React 18 (Vite)
+- **Styling:** Tailwind CSS v4, Radix UI Primitives
+- **State Management:** Zustand
+- **Typography:** Plus Jakarta Sans
 
-### 1. Prerequisites
-Ensure you have [Node.js](https://nodejs.org/) (v18+) and [MongoDB](https://www.mongodb.com/) installed on your machine.
+### Server
+- **Runtime:** Node.js, Express.js
+- **Database:** MongoDB (Mongoose) with 2dsphere indexes
+- **Security:** JWT, bcrypt, Helmet.js, express-rate-limit
+- **Communications:** Nodemailer
 
-### 2. Clone the Repository
+<br />
+
+## CORE CAPABILITIES
+
+- **Geospatial Intelligence:** Proprietary algorithms match donors with NGOs within an exact 15km radius using MongoDB spatial queries.
+- **Role-Based Access Control:** Distinct, isolated environments for Donors, NGOs, and System Administrators.
+- **End-to-End Transparency:** Mandatory cryptographic proof-of-delivery uploads to maintain a verifiable audit trail.
+- **Asynchronous Communications:** Automated email alerting systems for immediate dispatch notifications.
+
+<br />
+
+## SYSTEM DEPLOYMENT
+
+### Prerequisites
+Node.js (v18.0.0 or higher) and MongoDB (v6.0 or higher) are required for local instantiation.
+
+### 1. Backend Initialization
 ```bash
 git clone https://github.com/Sarvwan/food-redistrubtion.git
 cd food-redistrubtion
-```
 
-### 3. Backend Setup
-```bash
-# Install backend dependencies
 npm install
-
-# Create a .env file based on the environment variables section
-touch .env
-
-# Start the development server (runs on http://localhost:5000)
 npm run dev
 ```
 
-### 4. Frontend Setup
-Open a new terminal window.
+### 2. Frontend Initialization
 ```bash
-# Navigate to the client directory
 cd client
 
-# Install frontend dependencies
 npm install
-
-# Start the Vite development server (runs on http://localhost:5173)
 npm run dev
 ```
 
----
+<br />
 
-## 🔐 Environment Variables (`.env`)
+## ENVIRONMENT CONFIGURATION
 
-Create a `.env` file in the root backend directory:
+A `.env` file must be provisioned in the root directory prior to server initialization:
 
 ```env
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/food-relief
-JWT_SECRET=your_super_secret_jwt_key_here
+JWT_SECRET=your_cryptographic_secret
 
-# Email Configuration (Nodemailer)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_email_app_password
+# SMTP Configuration
+EMAIL_USER=system@yourdomain.com
+EMAIL_PASS=your_smtp_password
 
-# Twilio SMS Config (Mocked)
-TWILIO_SID=your_twilio_sid
-TWILIO_TOKEN=your_twilio_token
-TWILIO_PHONE=+1234567890
-
-# Client Configuration
+# Client Routing
 CLIENT_URL=http://localhost:5173
 ```
 
----
+<br />
 
-## 📡 API Reference
+## API SPECIFICATION
 
-### Public
+The system exposes a secure RESTful API. Below is the endpoint architecture:
+
+### Authentication & Identity
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | Health check and server uptime |
-| `GET` | `/api/stats` | Public landing page statistics |
-| `POST` | `/api/auth/register` | Register a new Donor or NGO |
-| `POST` | `/api/auth/login` | Authenticate and return JWT |
-| `GET` | `/api/auth/me` | Return current user profile |
+| `POST` | `/api/auth/register` | Provision new Donor or NGO identity |
+| `POST` | `/api/auth/login` | Authenticate and issue session token |
+| `GET` | `/api/auth/me` | Retrieve verified identity payload |
 
-### Donor
+### Donor Operations
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/donor/post` | Create a new food donation |
-| `GET` | `/api/donor/my-donations` | List donor's posted donations |
-| `GET` | `/api/donor/donation/:id` | Get donation details (and proof) |
-| `PATCH` | `/api/donor/donation/:id/cancel`| Cancel an open donation |
+| `POST` | `/api/donor/post` | Initialize a resource donation |
+| `GET` | `/api/donor/my-donations` | Query active and historical donations |
+| `GET` | `/api/donor/donation/:id` | Fetch specific asset tracking data |
+| `PATCH` | `/api/donor/donation/:id/cancel`| Terminate an active donation cycle |
 
-### NGO
+### NGO Operations
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/ngo/available-donations` | Get nearby (15km) open donations |
-| `GET` | `/api/ngo/my-claims` | Get donations claimed by the NGO |
-| `POST` | `/api/ngo/claim/:donationId` | Claim an open donation |
-| `PATCH` | `/api/ngo/collect/:donationId` | Mark a claimed donation as collected |
-| `POST` | `/api/ngo/proof/:donationId` | Upload delivery proof photos |
+| `GET` | `/api/ngo/available-donations` | Query proximate open resources |
+| `POST` | `/api/ngo/claim/:donationId` | Lock and claim a target resource |
+| `PATCH` | `/api/ngo/collect/:donationId` | Update chain-of-custody status |
+| `POST` | `/api/ngo/proof/:donationId` | Upload delivery verification artifacts |
 
-### Admin
+### Administrative Controls
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/admin/pending-ngos` | List NGOs awaiting approval |
-| `PATCH` | `/api/admin/approve-ngo/:id` | Approve an NGO account |
-| `PATCH` | `/api/admin/reject-ngo/:id` | Reject an NGO account |
-| `GET` | `/api/admin/all-donations` | View filtered donation history |
-| `GET` | `/api/admin/stats` | Get comprehensive platform stats |
+| `GET` | `/api/admin/pending-ngos` | Queue of unverified organizations |
+| `PATCH` | `/api/admin/approve-ngo/:id` | Authorize organization access |
+| `GET` | `/api/admin/stats` | System-wide telemetry and analytics |
 
----
+<br />
+
 <div align="center">
-  <i>Built with ❤️ to reduce food waste.</i>
+  <p>Sarvwan Engineering</p>
 </div>
